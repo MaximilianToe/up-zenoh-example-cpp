@@ -13,6 +13,7 @@
 #include <spdlog/spdlog.h>
 #include <unistd.h>
 #include <up-cpp/communication/RpcClient.h>
+#include <up-cpp/client/usubscription/v3/RpcClientUSubscription.h>
 #include <up-transport-zenoh-cpp/ZenohUTransport.h>
 
 #include <chrono>
@@ -25,6 +26,7 @@ using namespace uprotocol::v1;
 using namespace uprotocol::communication;
 using namespace uprotocol::datamodel::builder;
 using ZenohUTransport = uprotocol::transport::ZenohUTransport;
+using RpcClientUSubscription = uprotocol::core::usubscription::v3::RpcClientUSubscription;
 
 bool gTerminate = false;
 
@@ -33,37 +35,6 @@ void signalHandler(int signal) {
 		std::cout << "Ctrl+C received. Exiting..." << std::endl;
 		gTerminate = true;
 	}
-}
-
-void OnReceive(RpcClient::MessageOrStatus expected) {
-	if (!expected.has_value()) {
-		UStatus status = expected.error();
-		spdlog::error("Expected value not found. -- Status: {}",
-		              status.DebugString());
-		return;
-	}
-
-	UMessage message = std::move(expected).value();
-
-	if (message.attributes().payload_format() !=
-	    UPayloadFormat::UPAYLOAD_FORMAT_RAW) {
-		spdlog::error("Received message has unexpected payload format:\n{}",
-		              message.DebugString());
-		return;
-	}
-
-	if (message.payload().size() != (sizeof(uint64_t) * 3)) {
-		spdlog::error("Received message has unexpected payload size:\n{}",
-		              message.DebugString());
-		return;
-	}
-
-	// RPC response is expected to have a payload of 3 uint64_t values
-	// sequence number, current time, and random value
-	spdlog::debug("(Client) Received message: {}", message.DebugString());
-
-	const uint64_t* pdata = (uint64_t*)message.payload().data();
-	spdlog::info("Received payload: {} - {}, {}", pdata[0], pdata[1], pdata[2]);
 }
 
 /* The sample RPC client applications demonstrates how to send RPC requests and
@@ -75,24 +46,34 @@ int main(int argc, char** argv) {
 
 	if (argc < 2) {
 		std::cout << "No Zenoh config has been provided" << std::endl;
-		std::cout << "Usage: rpc_client <config_file>" << std::endl;
+		std::cout << "Usage: usubscription_client <config_file>" << std::endl;
 		return 1;
 	}
 
 	signal(SIGINT, signalHandler);
 
 	UUri source = getUUri(0);
-	UUri method = getUUri(12);
-	auto transport = std::make_shared<ZenohUTransport>(source, argv[1]);
-	auto client =
-	    RpcClient(transport, std::move(method), UPriority::UPRIORITY_CS4,
-	              std::chrono::milliseconds(500));
-	RpcClient::InvokeHandle handle;
 
-	while (!gTerminate) {
-		handle = client.invokeMethod(OnReceive);
-		sleep(1);
+	auto transport = std::make_shared<ZenohUTransport>(source, argv[1]);
+	auto usubscription_client = RpcClientUSubscription(transport);
+
+	UUri test_topic = getUUri(12);
+	auto subscription_request = usubscription_client.buildSubscriptionRequest(test_topic);
+
+	spdlog::info("Sending subscription request: {}", subscription_request.DebugString());
+
+	auto response_or_status = usubscription_client.subscribe(subscription_request);
+
+	if (!response_or_status.has_value()) {
+		spdlog::error("Failed to subscribe to topic: {}", response_or_status.error().DebugString());
+		return 1;
 	}
+	spdlog::info("Subscription response: {}", response_or_status.value().DebugString());
+	// while (!response_or_status.has_value() && !gTerminate) {
+	// 	spdlog::error("Failed to subscribe to topic: {}", response_or_status.error().DebugString());
+	// 	sleep(1);
+	// 	usubscription_client.subscribe(subscription_request);
+	// }
 
 	return 0;
 }

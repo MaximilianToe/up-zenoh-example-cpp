@@ -22,3 +22,4 @@ endif()
 
 add_subdirectory(pubsub)
 add_subdirectory(rpc)
+add_subdirectory(usubscription)

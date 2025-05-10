@@ -84,8 +84,8 @@ int main(int argc, char** argv) {
 	}
 
 	signal(SIGINT, signalHandler);
-	UUri source = getRpcUUri(0);
-	UUri method = getRpcUUri(12);
+	UUri source = getUUri(0);
+	UUri method = getUUri(12);
 	auto transport = std::make_shared<ZenohUTransport>(source, argv[1]);
 	auto server = RpcServer::create(transport, method, OnReceive);
 

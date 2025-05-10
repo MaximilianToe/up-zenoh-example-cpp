@@ -14,7 +14,7 @@
 
 #include <uprotocol/v1/uri.pb.h>
 
-uprotocol::v1::UUri getUUri(const int resource_id) {
+inline uprotocol::v1::UUri getUUri(const int resource_id) {
 	uprotocol::v1::UUri uuri;
 	uuri.set_authority_name("test_rpc.app");
 	uuri.set_ue_id(0x10001);
