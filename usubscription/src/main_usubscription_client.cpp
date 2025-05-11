@@ -14,6 +14,7 @@
 #include <unistd.h>
 #include <up-cpp/communication/RpcClient.h>
 #include <up-cpp/client/usubscription/v3/RpcClientUSubscription.h>
+#include <up-cpp/client/usubscription/v3/RequestBuilder.h>
 #include <up-transport-zenoh-cpp/ZenohUTransport.h>
 
 #include <chrono>
@@ -27,6 +28,7 @@ using namespace uprotocol::communication;
 using namespace uprotocol::datamodel::builder;
 using ZenohUTransport = uprotocol::transport::ZenohUTransport;
 using RpcClientUSubscription = uprotocol::core::usubscription::v3::RpcClientUSubscription;
+using RequestBuilder  = uprotocol::core::usubscription::v3::RequestBuilder;
 
 bool gTerminate = false;
 
@@ -41,8 +43,6 @@ void signalHandler(int signal) {
  * wait for the response
  */
 int main(int argc, char** argv) {
-	(void)argc;
-	(void)argv;
 
 	if (argc < 2) {
 		std::cout << "No Zenoh config has been provided" << std::endl;
@@ -55,10 +55,11 @@ int main(int argc, char** argv) {
 	UUri source = getUUri(0);
 
 	auto transport = std::make_shared<ZenohUTransport>(source, argv[1]);
-	auto usubscription_client = RpcClientUSubscription(transport);
+	RpcClientUSubscription usubscription_client(transport);
+	RequestBuilder request_builder;
 
 	UUri test_topic = getUUri(12);
-	auto subscription_request = usubscription_client.buildSubscriptionRequest(test_topic);
+	auto subscription_request = request_builder.buildSubscriptionRequest(test_topic);
 
 	spdlog::info("Sending subscription request: {}", subscription_request.DebugString());
 
