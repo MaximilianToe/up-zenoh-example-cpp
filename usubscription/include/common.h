@@ -18,7 +18,16 @@ inline uprotocol::v1::UUri getUUri(const int resource_id) {
 	uprotocol::v1::UUri uuri;
 	uuri.set_authority_name("test_rpc.app");
 	uuri.set_ue_id(0x10001);
-	uuri.set_ue_version_major(1);
+	uuri.set_ue_version_major(3);
+	uuri.set_resource_id(resource_id);
+	return uuri;
+}
+
+inline uprotocol::v1::UUri getTopicUUri(const int resource_id) {
+	uprotocol::v1::UUri uuri;
+	uuri.set_authority_name("core.usubscription");
+	uuri.set_ue_id(0x00001);
+	uuri.set_ue_version_major(3);
 	uuri.set_resource_id(resource_id);
 	return uuri;
 }

@@ -52,13 +52,13 @@ int main(int argc, char** argv) {
 
 	signal(SIGINT, signalHandler);
 
-	UUri source = getUUri(0);
+	UUri source = getTopicUUri(0);
 
 	auto transport = std::make_shared<ZenohUTransport>(source, argv[1]);
 	RpcClientUSubscription usubscription_client(transport);
 	RequestBuilder request_builder;
 
-	UUri test_topic = getUUri(12);
+	UUri test_topic = getTopicUUri(12);
 	auto subscription_request = request_builder.buildSubscriptionRequest(test_topic);
 
 	spdlog::info("Sending subscription request: {}", subscription_request.DebugString());
@@ -75,6 +75,8 @@ int main(int argc, char** argv) {
 	// 	sleep(1);
 	// 	usubscription_client.subscribe(subscription_request);
 	// }
+
+	sleep(10);
 
 	return 0;
 }
