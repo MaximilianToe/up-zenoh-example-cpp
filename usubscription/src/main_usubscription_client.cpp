@@ -39,7 +39,7 @@ void signalHandler(int signal) {
 	}
 }
 
-/* The sample RPC client applications demonstrates how to send RPC requests and
+/* The sample RPC client applications demonstrates how to send usbscription requests and
  * wait for the response
  */
 int main(int argc, char** argv) {
@@ -69,14 +69,13 @@ int main(int argc, char** argv) {
 		spdlog::error("Failed to subscribe to topic: {}", response_or_status.error().DebugString());
 		return 1;
 	}
-	spdlog::info("Subscription response: {}", response_or_status.value().DebugString());
-	// while (!response_or_status.has_value() && !gTerminate) {
-	// 	spdlog::error("Failed to subscribe to topic: {}", response_or_status.error().DebugString());
-	// 	sleep(1);
-	// 	usubscription_client.subscribe(subscription_request);
-	// }
 
-	sleep(10);
+	spdlog::info("Subscription response: {}", response_or_status.value().DebugString());
+	while (!response_or_status.has_value() && !gTerminate) {
+		spdlog::error("Failed to subscribe to topic: {}", response_or_status.error().DebugString());
+		sleep(3);
+		usubscription_client.subscribe(subscription_request);
+	}
 
 	return 0;
 }
